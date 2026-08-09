@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Star Trek: Latinum Auction & Away Team</title>
+  <style>
+    :root {
+      --lcars-orange: #ff9900;
+      --lcars-purple: #cc99cc;
+      --lcars-blue: #5599cc;
+      --lcars-red: #cc3333;
+      --lcars-yellow: #ffcc00;
+      --lcars-bg: #000000;
+      --lcars-panel: #111122;
+      --lcars-text: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+    body { background-color: var(--lcars-bg); color: var(--lcars-text); min-height: 100vh; display: flex; flex-direction: column; padding: 10px; }
+
+    header { display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--lcars-orange); padding-bottom: 8px; margin-bottom: 12px; }
+    h1 { font-size: 1.2rem; color: var(--lcars-orange); text-transform: uppercase; letter-spacing: 1px; }
+    .badge { background: var(--lcars-purple); color: #000; font-weight: bold; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; }
+
+    .card { background: var(--lcars-panel); border: 2px solid var(--lcars-blue); border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .card-title { color: var(--lcars-yellow); font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; text-transform: uppercase; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; }
+    .stat-box { background: #1a1a2e; padding: 6px 10px; border-left: 3px solid var(--lcars-blue); border-radius: 4px; display: flex; justify-content: space-between; font-size: 0.9rem; }
+    .stat-val { font-weight: bold; color: var(--lcars-yellow); }
+
+    .player-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .player-card { background: #181824; border: 2px solid var(--lcars-purple); border-radius: 8px; padding: 10px; text-align: center; }
+    .player-card.active { border-color: var(--lcars-yellow); box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); }
+    .latinum-count { font-size: 1.4rem; font-weight: bold; color: var(--lcars-yellow); margin-top: 4px; }
+
+    .btn { background: var(--lcars-orange); color: #000; border: none; padding: 12px 16px; font-size: 1rem; font-weight: bold; border-radius: 6px; width: 100%; cursor: pointer; text-transform: uppercase; margin-top: 6px; transition: 0.2s; }
+    .btn:active { opacity: 0.7; transform: scale(0.98); }
+    .btn-secondary { background: var(--lcars-blue); color: #000; }
+    .btn-danger { background: var(--lcars-red); color: #fff; }
+    .btn-purple { background: var(--lcars-purple); color: #000; }
+
+    .bid-controls { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .bid-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .num-btn { background: #22223a; color: #fff; border: 1px solid var(--lcars-blue); width: 44px; height: 44px; font-size: 1.2rem; font-weight: bold; border-radius: 6px; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .series-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #333; color: #fff; vertical-align: middle; margin-left: 6px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #333; font-size: 0.85rem; }
+    th { color: var(--lcars-orange); }
+
+    .winner-banner { background: var(--lcars-yellow); color: #000; text-align: center; padding: 10px; font-size: 1.3rem; font-weight: bold; border-radius: 6px; margin-bottom: 12px; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🖖 STAR TREK: LATINUM DRAFT</h1>
+    <span class="badge" id="header-status">M-Klasse</span>
+  </header>
+
+  <!-- START SCREEN -->
+  <div id="start-screen" class="screen active">
+    <div class="card">
+      <div class="card-title">Auktion starten</div>
+      <p style="font-size: 0.9rem; line-height: 1.4; color: #bbb; margin-bottom: 15px;">
+        Willkommen, Kommandanten! Beide Spieler starten mit <b>20 Barren goldgepresstem Latinum</b>. 
+        Nacheinander erscheinen <b>10 zufällige Charaktere</b>. Bietet klug, stellt das stärkste Außenteam zusammen und meistert die Endmissionen!
+      </p>
+      <button class="btn" onclick="startGame()">▶ Spiel Starten</button>
+      <button class="btn btn-secondary" onclick="showHighscores()" style="margin-top: 10px;">🏆 Highscores</button>
+    </div>
+  </div>
+
+  <!-- AUCTION SCREEN -->
+  <div id="auction-screen" class="screen">
+    <div class="player-bar">
+      <div class="player-card" id="card-hjalmar">
+        <div>HJALMAR</div>
+        <div class="latinum-count" id="lat-hjalmar">20 🟡</div>
+        <div style="font-size:0.75rem; color:#aaa;" id="team-cnt-hjalmar">Team: 0</div>
+      </div>
+      <div class="player-card" id="card-jonas">
+        <div>JONAS</div>
+        <div class="latinum-count" id="lat-jonas">20 🟡</div>
+        <div style="font-size:0.75rem; color:#aaa;" id="team-cnt-jonas">Team: 0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: var(--lcars-purple); font-weight: bold; font-size: 0.85rem;" id="round-indicator">Charakter 1 / 10</span>
+        <span class="series-badge" id="char-series">TNG</span>
+      </div>
+      <div class="card-title" id="char-name" style="font-size: 1.4rem; margin-top: 5px;">Jean-Luc Picard</div>
+
+      <div class="stats-grid">
+        <div class="stat-box"><span>Kommando/Diplomatie:</span><span class="stat-val" id="st-kd">10</span></div>
+        <div class="stat-box"><span>Wissensch./Medizin:</span><span class="stat-val" id="st-wm">6</span></div>
+        <div class="stat-box"><span>Technik/Taktik:</span><span class="stat-val" id="st-tt">7</span></div>
+        <div class="stat-box"><span>Täusch./Gerissenh.:</span><span class="stat-val" id="st-tg">5</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Zuschlag erteilen</div>
+      <div class="bid-controls">
+        <div class="bid-row">
+          <label for="bidder-select" style="font-size: 0.9rem;">Gewinner:</label>
+          <select id="bidder-select" style="background:#111; color:#fff; border:1px solid var(--lcars-blue); padding:8px; border-radius:4px; font-weight:bold; width:60%;">
+            <option value="Hjalmar">Hjalmar</option>
+            <option value="Jonas">Jonas</option>
+            <option value="Niemand">Niemand (Passen)</option>
+          </select>
+        </div>
+
+        <div class="bid-row" id="price-row">
+          <label style="font-size: 0.9rem;">Preis (Latinum):</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="num-btn" onclick="adjustBid(-1)">-</button>
+            <span id="bid-price-val" style="font-size: 1.3rem; font-weight: bold; color: var(--lcars-yellow); width: 30px; text-align: center;">0</span>
+            <button class="num-btn" onclick="adjustBid(1)">+</button>
+          </div>
+        </div>
+
+        <button class="btn" onclick="confirmBid()">✓ Zuschlag Buchen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="result-screen" class="screen">
+    <div class="winner-banner" id="winner-banner">HJALMAR GEWINNT!</div>
+
+    <div class="card">
+      <div class="card-title">🚀 Gezogene Missionen</div>
+      <div id="missions-list" style="font-size:0.85rem; line-height:1.4;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Endabrechnung</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Spieler</th>
+            <th>Punkte</th>
+            <th>Effizienz</th>
+            <th>Rang</th>
+          </tr>
+        </thead>
+        <tbody id="result-table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Die Außenteams</div>
+      <div style="font-size:0.85rem;" id="teams-summary"></div>
+    </div>
+
+    <button class="btn" onclick="startGame()">🔄 Neues Spiel</button>
+    <button class="btn btn-secondary" onclick="showHighscores()" style="margin-top: 8px;">🏆 Highscore-Tabelle</button>
+  </div>
+
+  <!-- HIGHSCORE SCREEN -->
+  <div id="highscore-screen" class="screen">
+    <div class="card">
+      <div class="card-title">🏆 Sternenflotten-Highscores</div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Spieler</th>
+            <th>Effizienz</th>
+            <th>Punkte</th>
+            <th>Rang</th>
+          </tr>
+        </thead>
+        <tbody id="highscore-table-body"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-secondary" onclick="showStartScreen()">◀ Zurück zum Hauptmenü</button>
+    <button class="btn btn-danger" onclick="clearHighscores()" style="margin-top: 8px;">🗑️ Highscores Löschen</button>
+  </div>
+
+  <script>
+    // --- CHARAKTER DATENBANK (152 Charaktere) ---
+    const DB = [
+      {"id": 1, "name": "James T. Kirk", "series": "TOS", "KD": 10, "WM": 5, "TT": 9, "TG": 7},
+      {"id": 2, "name": "Spock", "series": "TOS", "KD": 7, "WM": 10, "TT": 7, "TG": 4},
+      {"id": 3, "name": "Dr. Leonard 'Pille' McCoy", "series": "TOS", "KD": 5, "WM": 10, "TT": 4, "TG": 3},
+      {"id": 4, "name": "Montgomery 'Scotty' Scott", "series": "TOS", "KD": 5, "WM": 6, "TT": 10, "TG": 4},
+      {"id": 5, "name": "Hikaru Sulu", "series": "TOS", "KD": 7, "WM": 4, "TT": 8, "TG": 4},
+      {"id": 6, "name": "Nyota Uhura", "series": "TOS", "KD": 6, "WM": 6, "TT": 6, "TG": 4},
+      {"id": 7, "name": "Pavel Chekov", "series": "TOS", "KD": 5, "WM": 6, "TT": 7, "TG": 3},
+      {"id": 8, "name": "Schwester Christine Chapel", "series": "TOS", "KD": 3, "WM": 8, "TT": 3, "TG": 2},
+      {"id": 9, "name": "Janice Rand", "series": "TOS", "KD": 4, "WM": 3, "TT": 4, "TG": 3},
+      {"id": 10, "name": "Christopher Pike", "series": "TOS", "KD": 9, "WM": 5, "TT": 8, "TG": 4},
+      {"id": 11, "name": "Botschafter Sarek", "series": "TOS", "KD": 9, "WM": 7, "TT": 3, "TG": 6},
+      {"id": 12, "name": "Amanda Grayson", "series": "TOS", "KD": 6, "WM": 6, "TT": 2, "TG": 3},
+      {"id": 13, "name": "Jean-Luc Picard", "series": "TNG", "KD": 10, "WM": 6, "TT": 7, "TG": 5},
+      {"id": 14, "name": "William T. Riker", "series": "TNG", "KD": 9, "WM": 4, "TT": 8, "TG": 6},
+      {"id": 15, "name": "Data", "series": "TNG", "KD": 6, "WM": 10, "TT": 9, "TG": 2},
+      {"id": 16, "name": "Worf", "series": "TNG", "KD": 6, "WM": 3, "TT": 9, "TG": 3},
+      {"id": 17, "name": "Geordi La Forge", "series": "TNG", "KD": 5, "WM": 8, "TT": 10, "TG": 3},
+      {"id": 18, "name": "Deanna Troi", "series": "TNG", "KD": 7, "WM": 7, "TT": 2, "TG": 4},
+      {"id": 19, "name": "Dr. Beverly Crusher", "series": "TNG", "KD": 6, "WM": 10, "TT": 4, "TG": 3},
+      {"id": 20, "name": "Tasha Yar", "series": "TNG", "KD": 5, "WM": 3, "TT": 8, "TG": 4},
+      {"id": 21, "name": "Wesley Crusher", "series": "TNG", "KD": 3, "WM": 9, "TT": 8, "TG": 3},
+      {"id": 22, "name": "Dr. Katherine Pulaski", "series": "TNG", "KD": 5, "WM": 9, "TT": 3, "TG": 4},
+      {"id": 23, "name": "Guinan", "series": "TNG", "KD": 8, "WM": 6, "TT": 4, "TG": 8},
+      {"id": 24, "name": "Ro Laren", "series": "TNG", "KD": 5, "WM": 4, "TT": 8, "TG": 7},
+      {"id": 25, "name": "Reginald Barclay", "series": "TNG", "KD": 2, "WM": 7, "TT": 9, "TG": 2},
+      {"id": 26, "name": "Q", "series": "TNG", "KD": 8, "WM": 9, "TT": 8, "TG": 10},
+      {"id": 27, "name": "Lore", "series": "TNG", "KD": 6, "WM": 9, "TT": 8, "TG": 10},
+      {"id": 28, "name": "Spot (Datas Katze)", "series": "TNG", "KD": 1, "WM": 1, "TT": 1, "TG": 8},
+      {"id": 29, "name": "Lwaxana Troi", "series": "TNG", "KD": 8, "WM": 3, "TT": 1, "TG": 7},
+      {"id": 30, "name": "Gowron", "series": "TNG", "KD": 8, "WM": 3, "TT": 8, "TG": 8},
+      {"id": 31, "name": "Thomas Riker", "series": "TNG", "KD": 6, "WM": 4, "TT": 7, "TG": 7},
+      {"id": 32, "name": "Hugh (Borg)", "series": "TNG", "KD": 4, "WM": 7, "TT": 7, "TG": 3},
+      {"id": 33, "name": "K'Ehleyr", "series": "TNG", "KD": 7, "WM": 5, "TT": 7, "TG": 6},
+      {"id": 34, "name": "Vash", "series": "TNG", "KD": 5, "WM": 6, "TT": 3, "TG": 9},
+      {"id": 35, "name": "Schwester Alyssa Ogawa", "series": "TNG", "KD": 3, "WM": 7, "TT": 3, "TG": 2},
+      {"id": 36, "name": "Dr. Leah Brahms", "series": "TNG", "KD": 4, "WM": 9, "TT": 9, "TG": 3},
+      {"id": 37, "name": "Dr. Selar", "series": "TNG", "KD": 3, "WM": 8, "TT": 3, "TG": 2},
+      {"id": 38, "name": "Kurn", "series": "TNG", "KD": 7, "WM": 3, "TT": 8, "TG": 5},
+      {"id": 39, "name": "Tomalak", "series": "TNG", "KD": 8, "WM": 4, "TT": 7, "TG": 8},
+      {"id": 40, "name": "Gul Madred", "series": "TNG", "KD": 6, "WM": 4, "TT": 6, "TG": 9},
+      {"id": 41, "name": "Edward Jellico", "series": "TNG", "KD": 8, "WM": 3, "TT": 7, "TG": 5},
+      {"id": 42, "name": "Admiral Alynna Nechayev", "series": "TNG", "KD": 9, "WM": 4, "TT": 6, "TG": 6},
+      {"id": 43, "name": "Tam Elbrun", "series": "TNG", "KD": 2, "WM": 8, "TT": 2, "TG": 3},
+      {"id": 44, "name": "Sirna Kolrami", "series": "TNG", "KD": 4, "WM": 5, "TT": 9, "TG": 7},
+      {"id": 45, "name": "Sonja Gomez", "series": "TNG", "KD": 3, "WM": 7, "TT": 7, "TG": 2},
+      {"id": 46, "name": "Lal (Datas Tochter)", "series": "TNG", "KD": 2, "WM": 8, "TT": 7, "TG": 1},
+      {"id": 47, "name": "Ishara Yar", "series": "TNG", "KD": 4, "WM": 3, "TT": 7, "TG": 8},
+      {"id": 48, "name": "Dr. Paul Stubbs", "series": "TNG", "KD": 4, "WM": 9, "TT": 4, "TG": 3},
+      {"id": 49, "name": "Captain Robert Maxwell", "series": "TNG", "KD": 7, "WM": 3, "TT": 8, "TG": 5},
+      {"id": 50, "name": "K'mpec", "series": "TNG", "KD": 8, "WM": 4, "TT": 7, "TG": 6},
+      {"id": 51, "name": "Toral", "series": "TNG", "KD": 5, "WM": 2, "TT": 5, "TG": 7},
+      {"id": 52, "name": "Lursa", "series": "TNG", "KD": 6, "WM": 2, "TT": 6, "TG": 8},
+      {"id": 53, "name": "B'Etor", "series": "TNG", "KD": 6, "WM": 2, "TT": 6, "TG": 8},
+      {"id": 54, "name": "Dr. Timicin", "series": "TNG", "KD": 3, "WM": 9, "TT": 5, "TG": 2},
+      {"id": 55, "name": "Keiko O'Brien", "series": "TNG", "KD": 4, "WM": 8, "TT": 2, "TG": 3},
+      {"id": 56, "name": "Alexander Rozhenko", "series": "TNG", "KD": 2, "WM": 2, "TT": 3, "TG": 3},
+      {"id": 57, "name": "Benjamin Sisko", "series": "DS9", "KD": 10, "WM": 5, "TT": 9, "TG": 7},
+      {"id": 58, "name": "Kira Nerys", "series": "DS9", "KD": 8, "WM": 3, "TT": 9, "TG": 7},
+      {"id": 59, "name": "Odo", "series": "DS9", "KD": 7, "WM": 4, "TT": 8, "TG": 8},
+      {"id": 60, "name": "Jadzia Dax", "series": "DS9", "KD": 7, "WM": 9, "TT": 8, "TG": 5},
+      {"id": 61, "name": "Ezri Dax", "series": "DS9", "KD": 5, "WM": 8, "TT": 4, "TG": 4},
+      {"id": 62, "name": "Dr. Julian Bashir", "series": "DS9", "KD": 5, "WM": 10, "TT": 5, "TG": 5},
+      {"id": 63, "name": "Miles O'Brien", "series": "DS9", "KD": 6, "WM": 5, "TT": 10, "TG": 5},
+      {"id": 64, "name": "Quark", "series": "DS9", "KD": 5, "WM": 2, "TT": 3, "TG": 10},
+      {"id": 65, "name": "Elim Garak", "series": "DS9", "KD": 5, "WM": 4, "TT": 7, "TG": 10},
+      {"id": 66, "name": "Gul Dukat", "series": "DS9", "KD": 8, "WM": 3, "TT": 8, "TG": 10},
+      {"id": 67, "name": "Rom", "series": "DS9", "KD": 3, "WM": 5, "TT": 9, "TG": 4},
+      {"id": 68, "name": "Nog", "series": "DS9", "KD": 6, "WM": 4, "TT": 7, "TG": 5},
+      {"id": 69, "name": "Weyoun", "series": "DS9", "KD": 7, "WM": 3, "TT": 5, "TG": 9},
+      {"id": 70, "name": "Winn Adami (Kai Winn)", "series": "DS9", "KD": 8, "WM": 3, "TT": 2, "TG": 10},
+      {"id": 71, "name": "Morn", "series": "DS9", "KD": 6, "WM": 2, "TT": 3, "TG": 7},
+      {"id": 72, "name": "Tora Ziyal", "series": "DS9", "KD": 3, "WM": 6, "TT": 2, "TG": 3},
+      {"id": 73, "name": "Damar", "series": "DS9", "KD": 7, "WM": 3, "TT": 8, "TG": 7},
+      {"id": 74, "name": "General Martok", "series": "DS9", "KD": 9, "WM": 3, "TT": 9, "TG": 6},
+      {"id": 75, "name": "Joseph Sisko", "series": "DS9", "KD": 5, "WM": 3, "TT": 2, "TG": 4},
+      {"id": 76, "name": "Kasidy Yates", "series": "DS9", "KD": 6, "WM": 3, "TT": 6, "TG": 5},
+      {"id": 77, "name": "Leeta", "series": "DS9", "KD": 5, "WM": 2, "TT": 2, "TG": 6},
+      {"id": 78, "name": "Vic Fontaine", "series": "DS9", "KD": 7, "WM": 3, "TT": 2, "TG": 6},
+      {"id": 79, "name": "Großer Nagus Zek", "series": "DS9", "KD": 8, "WM": 2, "TT": 2, "TG": 9},
+      {"id": 80, "name": "Ishka (Moogie)", "series": "DS9", "KD": 7, "WM": 4, "TT": 3, "TG": 9},
+      {"id": 81, "name": "Brunt (FCA)", "series": "DS9", "KD": 6, "WM": 3, "TT": 3, "TG": 9},
+      {"id": 82, "name": "Die Gründerin", "series": "DS9", "KD": 9, "WM": 5, "TT": 7, "TG": 10},
+      {"id": 83, "name": "Michael Eddington", "series": "DS9", "KD": 6, "WM": 4, "TT": 8, "TG": 8},
+      {"id": 84, "name": "Enabran Tain", "series": "DS9", "KD": 7, "WM": 3, "TT": 6, "TG": 10},
+      {"id": 85, "name": "Vedek Bareil Antos", "series": "DS9", "KD": 7, "WM": 3, "TT": 2, "TG": 4},
+      {"id": 86, "name": "Kor (DS9)", "series": "DS9", "KD": 8, "WM": 2, "TT": 8, "TG": 5},
+      {"id": 87, "name": "Koloth", "series": "DS9", "KD": 7, "WM": 2, "TT": 8, "TG": 6},
+      {"id": 88, "name": "Kang", "series": "DS9", "KD": 8, "WM": 2, "TT": 8, "TG": 5},
+      {"id": 89, "name": "Shakaar Edon", "series": "DS9", "KD": 8, "WM": 3, "TT": 7, "TG": 5},
+      {"id": 90, "name": "Admiral William Ross", "series": "DS9", "KD": 8, "WM": 4, "TT": 8, "TG": 6},
+      {"id": 91, "name": "Keevan (Vorta)", "series": "DS9", "KD": 5, "WM": 3, "TT": 4, "TG": 9},
+      {"id": 92, "name": "Yelgrun (Vorta)", "series": "DS9", "KD": 5, "WM": 3, "TT": 3, "TG": 8},
+      {"id": 93, "name": "Remata'Klan", "series": "DS9", "KD": 6, "WM": 2, "TT": 9, "TG": 2},
+      {"id": 94, "name": "Goran'Agar", "series": "DS9", "KD": 7, "WM": 2, "TT": 8, "TG": 4},
+      {"id": 95, "name": "Ikat'ika", "series": "DS9", "KD": 6, "WM": 2, "TT": 9, "TG": 2},
+      {"id": 96, "name": "Admiral Leyton", "series": "DS9", "KD": 8, "WM": 3, "TT": 7, "TG": 8},
+      {"id": 97, "name": "Luther Sloan (Sektion 31)", "series": "DS9", "KD": 6, "WM": 5, "TT": 7, "TG": 10},
+      {"id": 98, "name": "Dr. Mora Pol", "series": "DS9", "KD": 4, "WM": 9, "TT": 3, "TG": 4},
+      {"id": 99, "name": "Brik (Nausicaaner)", "series": "DS9", "KD": 2, "WM": 1, "TT": 6, "TG": 4},
+      {"id": 100, "name": "Kathryn Janeway", "series": "VOY", "KD": 10, "WM": 8, "TT": 8, "TG": 6},
+      {"id": 101, "name": "Chakotay", "series": "VOY", "KD": 8, "WM": 5, "TT": 8, "TG": 5},
+      {"id": 102, "name": "Tuvok", "series": "VOY", "KD": 7, "WM": 7, "TT": 9, "TG": 5},
+      {"id": 103, "name": "B'Elanna Torres", "series": "VOY", "KD": 5, "WM": 7, "TT": 10, "TG": 5},
+      {"id": 104, "name": "Tom Paris", "series": "VOY", "KD": 6, "WM": 4, "TT": 9, "TG": 6},
+      {"id": 105, "name": "Harry Kim", "series": "VOY", "KD": 4, "WM": 7, "TT": 7, "TG": 2},
+      {"id": 106, "name": "Der Medizinisch-Holografische Doktor", "series": "VOY", "KD": 5, "WM": 10, "TT": 5, "TG": 4},
+      {"id": 107, "name": "Seven of Nine", "series": "VOY", "KD": 6, "WM": 10, "TT": 9, "TG": 4},
+      {"id": 108, "name": "Neelix", "series": "VOY", "KD": 6, "WM": 4, "TT": 3, "TG": 7},
+      {"id": 109, "name": "Kes", "series": "VOY", "KD": 4, "WM": 8, "TT": 3, "TG": 3},
+      {"id": 110, "name": "Seska", "series": "VOY", "KD": 6, "WM": 6, "TT": 7, "TG": 10},
+      {"id": 111, "name": "Maje Culluh (Kazon)", "series": "VOY", "KD": 7, "WM": 2, "TT": 7, "TG": 7},
+      {"id": 112, "name": "Icheb", "series": "VOY", "KD": 4, "WM": 9, "TT": 7, "TG": 2},
+      {"id": 113, "name": "Naomi Wildman", "series": "VOY", "KD": 3, "WM": 5, "TT": 3, "TG": 3},
+      {"id": 114, "name": "Lon Suder", "series": "VOY", "KD": 2, "WM": 3, "TT": 8, "TG": 7},
+      {"id": 115, "name": "Samantha Wildman", "series": "VOY", "KD": 3, "WM": 7, "TT": 4, "TG": 2},
+      {"id": 116, "name": "Joe Carey", "series": "VOY", "KD": 3, "WM": 6, "TT": 8, "TG": 2},
+      {"id": 117, "name": "Vorik", "series": "VOY", "KD": 3, "WM": 7, "TT": 8, "TG": 2},
+      {"id": 118, "name": "Michael Jonas", "series": "VOY", "KD": 3, "WM": 3, "TT": 5, "TG": 7},
+      {"id": 119, "name": "Borg-Königin", "series": "VOY", "KD": 10, "WM": 9, "TT": 10, "TG": 9},
+      {"id": 120, "name": "Q2 (Junior)", "series": "VOY", "KD": 4, "WM": 8, "TT": 6, "TG": 8},
+      {"id": 121, "name": "Captain Rudolph Ransom", "series": "VOY", "KD": 7, "WM": 5, "TT": 7, "TG": 8},
+      {"id": 122, "name": "Commander Maxwell Burke", "series": "VOY", "KD": 5, "WM": 4, "TT": 6, "TG": 7},
+      {"id": 123, "name": "Brax", "series": "VOY", "KD": 4, "WM": 3, "TT": 4, "TG": 4},
+      {"id": 124, "name": "Arturis (Spezies 116)", "series": "VOY", "KD": 5, "WM": 8, "TT": 6, "TG": 9},
+      {"id": 125, "name": "Kashyk (Devore-Inspektor)", "series": "VOY", "KD": 7, "WM": 4, "TT": 7, "TG": 9},
+      {"id": 126, "name": "Mezoti", "series": "VOY", "KD": 2, "WM": 7, "TT": 5, "TG": 2},
+      {"id": 127, "name": "Axum (Unimatrix Zero)", "series": "VOY", "KD": 7, "WM": 6, "TT": 7, "TG": 6},
+      {"id": 128, "name": "One (Super-Borg)", "series": "VOY", "KD": 5, "WM": 9, "TT": 10, "TG": 2},
+      {"id": 129, "name": "Captain Chaotica", "series": "VOY", "KD": 7, "WM": 2, "TT": 5, "TG": 6},
+      {"id": 130, "name": "Satan's Robot", "series": "VOY", "KD": 1, "WM": 1, "TT": 6, "TG": 1},
+      {"id": 131, "name": "Kurros (Denkfabrik)", "series": "VOY", "KD": 6, "WM": 10, "TT": 5, "TG": 9},
+      {"id": 132, "name": "Dr. Ma'Bor Jetrel", "series": "VOY", "KD": 4, "WM": 10, "TT": 5, "TG": 4},
+      {"id": 133, "name": "Alixus", "series": "VOY", "KD": 6, "WM": 3, "TT": 2, "TG": 8},
+      {"id": 134, "name": "Gegen (Voth-Wissenschaftler)", "series": "VOY", "KD": 5, "WM": 10, "TT": 4, "TG": 4},
+      {"id": 135, "name": "Minister Odala (Voth)", "series": "VOY", "KD": 8, "WM": 5, "TT": 5, "TG": 7},
+      {"id": 136, "name": "Razik (Kazon)", "series": "VOY", "KD": 6, "WM": 2, "TT": 6, "TG": 6},
+      {"id": 137, "name": "Karr (Hirogen-Jäger)", "series": "VOY", "KD": 7, "WM": 3, "TT": 9, "TG": 6},
+      {"id": 138, "name": "Turanj (Hirogen)", "series": "VOY", "KD": 5, "WM": 2, "TT": 8, "TG": 5},
+      {"id": 139, "name": "Donik (Hirogen Techniker)", "series": "VOY", "KD": 3, "WM": 7, "TT": 8, "TG": 3},
+      {"id": 140, "name": "Lt. Ayala", "series": "VOY", "KD": 3, "WM": 2, "TT": 6, "TG": 3},
+      {"id": 141, "name": "Dr. Hippocrates Noah", "series": "VOY", "KD": 5, "WM": 7, "TT": 4, "TG": 8},
+      {"id": 142, "name": "Kazon-Nistrim Krieger", "series": "VOY", "KD": 4, "WM": 1, "TT": 6, "TG": 5},
+      {"id": 143, "name": "Gothmage (Kazon)", "series": "VOY", "KD": 5, "WM": 2, "TT": 5, "TG": 6},
+      {"id": 144, "name": "Riley Frazier (Borg-Kooperative)", "series": "VOY", "KD": 6, "WM": 7, "TT": 6, "TG": 4},
+      {"id": 145, "name": "Kellan (Kazon)", "series": "VOY", "KD": 4, "WM": 2, "TT": 6, "TG": 4},
+      {"id": 146, "name": "Talla", "series": "VOY", "KD": 4, "WM": 4, "TT": 5, "TG": 6},
+      {"id": 147, "name": "Noss", "series": "VOY", "KD": 4, "WM": 3, "TT": 6, "TG": 4},
+      {"id": 148, "name": "Lahr", "series": "VOY", "KD": 3, "WM": 4, "TT": 5, "TG": 4},
+      {"id": 149, "name": "Gath", "series": "VOY", "KD": 6, "WM": 3, "TT": 4, "TG": 7},
+      {"id": 150, "name": "Jirex", "series": "VOY", "KD": 4, "WM": 5, "TT": 5, "TG": 5},
+      {"id": 151, "name": "Tiros", "series": "VOY", "KD": 5, "WM": 3, "TT": 7, "TG": 5},
+      {"id": 152, "name": "Verad Dax", "series": "DS9", "KD": 4, "WM": 6, "TT": 4, "TG": 8}
+    ];
+
+    // --- MISSIONEN ---
+    const MISSIONS = [
+      { name: "🛸 Borg-Kubus-Abfangmission", desc: "TT x3, WM x2", mults: { TT: 3, WM: 2, KD: 0, TG: 0 } },
+      { name: "🕊️ Erstkontakt im Gamma-Quadranten", desc: "KD x3, WM x2", mults: { KD: 3, WM: 2, TT: 0, TG: 0 } },
+      { name: "💰 Ferengi-Schmuggel & Verhandlung", desc: "TG x3, KD x2", mults: { TG: 3, KD: 2, WM: 0, TT: 0 } },
+      { name: "☣️ Biologische Seuche auf Kolonie", desc: "WM x3, KD x2", mults: { WM: 3, KD: 2, TT: 0, TG: 0 } },
+      { name: "🌋 Dämon-Klasse Welt Überleben", desc: "TT x3, WM x2", mults: { TT: 3, WM: 2, KD: 0, TG: 0 } },
+      { name: "🕵️ Romulanische Intrige", desc: "TG x3, TT x2", mults: { TG: 3, TT: 2, KD: 0, WM: 0 } },
+      { name: "⚔️ Klingonisches Ehrenduell", desc: "TT x3, KD x1", mults: { TT: 3, KD: 1, WM: 0, TG: 0 } },
+      { name: "⏳ Temporale Anomalie-Krise", desc: "WM x3, TG x2", mults: { WM: 3, TG: 2, KD: 0, TT: 0 } }
+    ];
+
+    // --- SYNERGIEN & RIVALITÄTEN ---
+    const SYNERGIES = [
+      { ids: [1, 2, 3], bonus: 5, name: "Das Unschlagbare Trio (Kirk/Spock/McCoy)" },
+      { ids: [17, 63], bonus: 3, name: "Meister-Ingenieure (Geordi/O'Brien)" },
+      { ids: [16, 74], bonus: 3, name: "Klingonische Ehrengarde (Worf/Martok)" },
+      { ids: [65, 84], bonus: 4, name: "Kardassianischer Geheimdienst (Garak/Tain)" },
+      { ids: [57, 66], bonus: -5, name: "Erzfeinde (Sisko/Dukat)" },
+      { ids: [100, 110], bonus: -3, name: "Maquis-Verrat (Janeway/Seska)" },
+      { ids: [26, 27], bonus: -4, name: "Gefährlicher Frohsinn (Q/Lore)" }
+    ];
+
+    // --- SPIEL-ZUSTAND ---
+    let state = {
+      latinum: { Hjalmar: 20, Jonas: 20 },
+      teams: { Hjalmar: [], Jonas: [] },
+      pool: [],
+      currentIndex: 0,
+      currentBid: 0,
+      drawnMissions: []
+    };
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showStartScreen() { showScreen('start-screen'); }
+
+    function startGame() {
+      // Shuffeln und 10 zufällige Charaktere ziehen
+      const shuffled = [...DB].sort(() => 0.5 - Math.random());
+      state.pool = shuffled.slice(0, 10);
+      state.currentIndex = 0;
+      state.latinum = { Hjalmar: 20, Jonas: 20 };
+      state.teams = { Hjalmar: [], Jonas: [] };
+      
+      // 2 bis 3 zufällige Missionen ziehen
+      const shuffledMissions = [...MISSIONS].sort(() => 0.5 - Math.random());
+      const numMissions = Math.floor(Math.random() * 2) + 2; // 2 oder 3
+      state.drawnMissions = shuffledMissions.slice(0, numMissions);
+
+      showScreen('auction-screen');
+      renderAuctionRound();
+    }
+
+    function renderAuctionRound() {
+      const char = state.pool[state.currentIndex];
+      document.getElementById('round-indicator').innerText = `Charakter ${state.currentIndex + 1} / 10`;
+      document.getElementById('char-series').innerText = char.series;
+      document.getElementById('char-name').innerText = char.name;
+      document.getElementById('st-kd').innerText = char.KD;
+      document.getElementById('st-wm').innerText = char.WM;
+      document.getElementById('st-tt').innerText = char.TT;
+      document.getElementById('st-tg').innerText = char.TG;
+
+      document.getElementById('lat-hjalmar').innerText = `${state.latinum.Hjalmar} 🟡`;
+      document.getElementById('lat-jonas').innerText = `${state.latinum.Jonas} 🟡`;
+      document.getElementById('team-cnt-hjalmar').innerText = `Team: ${state.teams.Hjalmar.length}`;
+      document.getElementById('team-cnt-jonas').innerText = `Team: ${state.teams.Jonas.length}`;
+
+      state.currentBid = 0;
+      document.getElementById('bid-price-val').innerText = '0';
+      document.getElementById('bidder-select').value = 'Hjalmar';
+      togglePriceRow();
+    }
+
+    document.getElementById('bidder-select').addEventListener('change', togglePriceRow);
+
+    function togglePriceRow() {
+      const bidder = document.getElementById('bidder-select').value;
+      const priceRow = document.getElementById('price-row');
+      if (bidder === 'Niemand') {
+        priceRow.style.display = 'none';
+        state.currentBid = 0;
+      } else {
+        priceRow.style.display = 'flex';
+      }
+    }
+
+    function adjustBid(delta) {
+      const bidder = document.getElementById('bidder-select').value;
+      if (bidder === 'Niemand') return;
+      
+      const maxAvailable = state.latinum[bidder];
+      let newBid = state.currentBid + delta;
+      if (newBid < 0) newBid = 0;
+      if (newBid > maxAvailable) newBid = maxAvailable;
+
+      state.currentBid = newBid;
+      document.getElementById('bid-price-val').innerText = state.currentBid;
+    }
+
+    function confirmBid() {
+      const bidder = document.getElementById('bidder-select').value;
+      const char = state.pool[state.currentIndex];
+
+      if (bidder !== 'Niemand') {
+        if (state.currentBid > state.latinum[bidder]) {
+          alert(`${bidder} hat nicht genug Latinum!`);
+          return;
+        }
+        state.latinum[bidder] -= state.currentBid;
+        state.teams[bidder].push(char);
+      }
+
+      state.currentIndex++;
+      if (state.currentIndex < 10) {
+        renderAuctionRound();
+      } else {
+        finishGame();
+      }
+    }
+
+    function calcTeamScore(team, missions) {
+      let score = 0;
+      const teamIds = team.map(c => c.id);
+
+      // Missions-Punkte
+      team.forEach(char => {
+        missions.forEach(m => {
+          score += (char.KD * m.mults.KD) +
+                   (char.WM * m.mults.WM) +
+                   (char.TT * m.mults.TT) +
+                   (char.TG * m.mults.TG);
+        });
+      });
+
+      // Synergien
+      SYNERGIES.forEach(syn => {
+        const hasAll = syn.ids.every(id => teamIds.includes(id));
+        if (hasAll) score += syn.bonus;
+      });
+
+      return score;
+    }
+
+    // Effizienz: Berechnet das theoretische Maximum aus allen 1024 Kombinationen des gezogenen 10er-Pools
+    function calcMaxPossibleScore(pool, missions) {
+      let maxScore = 0;
+      const n = pool.length;
+
+      for (let i = 0; i < (1 << n); i++) {
+        const subteam = [];
+        for (let j = 0; j < n; j++) {
+          if ((i & (1 << j)) !== 0) {
+            subteam.push(pool[j]);
+          }
+        }
+        const s = calcTeamScore(subteam, missions);
+        if (s > maxScore) maxScore = s;
+      }
+      return maxScore || 1; // Div by zero verhindern
+    }
+
+    function getRank(eff) {
+      if (eff >= 90) return { title: "Flottenadmiral", color: "var(--lcars-yellow)" };
+      if (eff >= 75) return { title: "Captain", color: "var(--lcars-orange)" };
+      if (eff >= 60) return { title: "Commander", color: "var(--lcars-blue)" };
+      if (eff >= 45) return { title: "Fähnrich", color: "var(--lcars-purple)" };
+      return { title: "Redshirt", color: "var(--lcars-red)" };
+    }
+
+    function finishGame() {
+      const scoreHjalmar = calcTeamScore(state.teams.Hjalmar, state.drawnMissions);
+      const scoreJonas = calcTeamScore(state.teams.Jonas, state.drawnMissions);
+      const maxPossible = calcMaxPossibleScore(state.pool, state.drawnMissions);
+
+      const effHjalmar = ((scoreHjalmar / maxPossible) * 100).toFixed(1);
+      const effJonas = ((scoreJonas / maxPossible) * 100).toFixed(1);
+
+      const rankHjalmar = getRank(effHjalmar);
+      const rankJonas = getRank(effJonas);
+
+      // Gewinner Banner
+      const banner = document.getElementById('winner-banner');
+      if (scoreHjalmar > scoreJonas) {
+        banner.innerText = `🏆 HJALMAR GEWINNT! (${scoreHjalmar} vs ${scoreJonas} Pkt)`;
+      } else if (scoreJonas > scoreHjalmar) {
+        banner.innerText = `🏆 JONAS GEWINNT! (${scoreJonas} vs ${scoreHjalmar} Pkt)`;
+      } else {
+        banner.innerText = `🤝 UNENTSCHIEDEN! (${scoreHjalmar} Pkt)`;
+      }
+
+      // Missionen rendern
+      const mList = document.getElementById('missions-list');
+      mList.innerHTML = state.drawnMissions.map(m => `
+        <div style="margin-bottom:6px;"><b>${m.name}</b><br><span style="color:#aaa;">${m.desc}</span></div>
+      `).join('');
+
+      // Ergebnisse Rendern
+      const tbody = document.getElementById('result-table-body');
+      tbody.innerHTML = `
+        <tr>
+          <td><b>Hjalmar</b></td>
+          <td>${scoreHjalmar}</td>
+          <td><b>${effHjalmar}%</b></td>
+          <td style="color:${rankHjalmar.color}; font-weight:bold;">${rankHjalmar.title}</td>
+        </tr>
+        <tr>
+          <td><b>Jonas</b></td>
+          <td>${scoreJonas}</td>
+          <td><b>${effJonas}%</b></td>
+          <td style="color:${rankJonas.color}; font-weight:bold;">${rankJonas.title}</td>
+        </tr>
+      `;
+
+      // Teams Rendern
+      const teamsSummary = document.getElementById('teams-summary');
+      teamsSummary.innerHTML = `
+        <p><b style="color:var(--lcars-yellow);">Hjalmar (${state.teams.Hjalmar.length} Mitglieder):</b><br>
+        ${state.teams.Hjalmar.map(c => c.name).join(', ') || 'Keine'}</p>
+        <br>
+        <p><b style="color:var(--lcars-yellow);">Jonas (${state.teams.Jonas.length} Mitglieder):</b><br>
+        ${state.teams.Jonas.map(c => c.name).join(', ') || 'Keine'}</p>
+      `;
+
+      // Highscore Speichern
+      saveHighscore("Hjalmar", effHjalmar, scoreHjalmar, rankHjalmar.title);
+      saveHighscore("Jonas", effJonas, scoreJonas, rankJonas.title);
+
+      showScreen('result-screen');
+    }
+
+    // --- HIGHSCORE SYSTEM (LocalStorage) ---
+    function getHighscores() {
+      const raw = localStorage.getItem('st_latinum_highscores');
+      return raw ? JSON.parse(raw) : [];
+    }
+
+    function saveHighscore(player, eff, points, rank) {
+      let scores = getHighscores();
+      scores.push({
+        player,
+        eff: parseFloat(eff),
+        points: parseInt(points),
+        rank,
+        date: new Date().toLocaleDateString('de-DE')
+      });
+      // Sortieren nach Effizienz (%) absteigend
+      scores.sort((a, b) => b.eff - a.eff);
+      scores = scores.slice(0, 20); // Top 20 behalten
+      localStorage.setItem('st_latinum_highscores', JSON.stringify(scores));
+    }
+
+    function showHighscores() {
+      const scores = getHighscores();
+      const tbody = document.getElementById('highscore-table-body');
+      
+      if (scores.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#888;">Noch keine Highscores vorhanden</td></tr>`;
+      } else {
+        tbody.innerHTML = scores.map((s, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><b>${s.player}</b></td>
+            <td style="color:var(--lcars-yellow); font-weight:bold;">${s.eff}%</td>
+            <td>${s.points}</td>
+            <td>${s.rank}</td>
+          </tr>
+        `).join('');
+      }
+
+      showScreen('highscore-screen');
+    }
+
+    function clearHighscores() {
+      if (confirm('Möchtest du wirklich alle Highscores löschen?')) {
+        localStorage.removeItem('st_latinum_highscores');
+        showHighscores();
+      }
+    }
+  </script>
+</body>
+</html>
