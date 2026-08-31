@@ -43,7 +43,6 @@
     .bid-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .num-btn { background: #22223a; color: #fff; border: 1px solid var(--lcars-blue); width: 44px; height: 44px; font-size: 1.2rem; font-weight: bold; border-radius: 6px; }
 
-    /* Team Listen Styles */
     .team-lists-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .team-col { background: #0a0a14; padding: 8px; border-radius: 6px; border-left: 3px solid #333; }
     .team-col.hjalmar { border-color: var(--lcars-purple); }
@@ -52,14 +51,12 @@
     .team-ul { list-style-type: none; font-size: 0.8rem; line-height: 1.5; color: #ccc; }
     .team-ul li { margin-bottom: 3px; }
 
-    /* Mission Reveal Styles */
     .mission-alert { color: var(--lcars-red); font-weight: bold; text-align: center; font-size: 1.2rem; margin-bottom: 15px; animation: blink 1.5s infinite; }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .mission-focus { background: #22223a; padding: 10px; border-radius: 6px; text-align: center; color: var(--lcars-yellow); font-weight: bold; margin-bottom: 15px; }
+    .mission-focus { background: #22223a; padding: 10px; border-radius: 6px; text-align: center; color: var(--lcars-yellow); font-weight: bold; margin-bottom: 15px; line-height: 1.4; }
 
     .screen { display: none; }
     .screen.active { display: block; }
-
     .series-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #333; color: #fff; vertical-align: middle; margin-left: 6px; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -67,6 +64,7 @@
     th { color: var(--lcars-orange); }
 
     .winner-banner { background: var(--lcars-yellow); color: #000; text-align: center; padding: 10px; font-size: 1.3rem; font-weight: bold; border-radius: 6px; margin-bottom: 12px; text-transform: uppercase; }
+    .end-teams { font-size: 0.85rem; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -76,21 +74,21 @@
     <span class="badge" id="header-status">Bereit</span>
   </header>
 
-  <!-- 1. START SCREEN -->
+  <!-- START SCREEN -->
   <div id="start-screen" class="screen active">
     <div class="card">
       <div class="card-title">Auktion starten</div>
       <p style="font-size: 0.9rem; line-height: 1.4; color: #bbb; margin-bottom: 15px;">
         Willkommen! Beide Spieler starten mit <b>20 Barren goldgepresstem Latinum</b>. 
         Nacheinander erscheinen <b>10 zufällige Charaktere</b>.<br><br>
-        Es wird <b>eine zentrale Mission</b> gezogen, die bestimmt, welche Fähigkeiten am Ende am wertvollsten sind!
+        Es wird <b>eine zentrale Mission</b> gezogen. Beachtet die Multiplikatoren! Alle anderen Attribute zählen normal (x1).
       </p>
       <button class="btn" onclick="startDraftProcess()">▶ Neue Runde</button>
       <button class="btn btn-secondary" onclick="showHighscores()" style="margin-top: 10px;">🏆 Highscores</button>
     </div>
   </div>
 
-  <!-- 2. MISSION REVEAL SCREEN -->
+  <!-- MISSION REVEAL SCREEN -->
   <div id="mission-reveal-screen" class="screen">
     <div class="card" style="border-color: var(--lcars-red);">
       <div class="mission-alert">⚠️ EINGEHENDE MISSION ⚠️</div>
@@ -100,14 +98,15 @@
       
       <div class="mission-focus">
         WICHTIGSTE ATTRIBUTE:<br>
-        <span id="reveal-mission-mults" style="font-size: 1.2rem; color: #fff;"></span>
+        <span id="reveal-mission-mults" style="font-size: 1.1rem; color: #fff;"></span><br>
+        <span style="font-size: 0.8rem; color: #aaa;">(Restliche Werte zählen einfach)</span>
       </div>
 
       <button class="btn btn-secondary" onclick="startAuction()">▶ Bieten Starten</button>
     </div>
   </div>
 
-  <!-- 3. AUCTION SCREEN -->
+  <!-- AUCTION SCREEN -->
   <div id="auction-screen" class="screen">
     <div class="player-bar">
       <div class="player-card" style="border-color: var(--lcars-purple);">
@@ -178,7 +177,7 @@
     </div>
   </div>
 
-  <!-- 4. RESULT SCREEN -->
+  <!-- RESULT SCREEN -->
   <div id="result-screen" class="screen">
     <div class="winner-banner" id="winner-banner">HJALMAR GEWINNT!</div>
 
@@ -200,12 +199,20 @@
         </thead>
         <tbody id="result-table-body"></tbody>
       </table>
+      <div style="font-size: 0.75rem; color: #888; margin-top: 8px; text-align: center;">
+        *100% entspricht dem stärksten 5er-Team dieser Runde. Über 100% sind mit größeren Teams möglich!
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Finale Außenteams</div>
+      <div id="teams-summary" class="team-lists-grid end-teams"></div>
     </div>
 
     <button class="btn" onclick="showScreen('start-screen')">🔄 Hauptmenü</button>
   </div>
 
-  <!-- 5. HIGHSCORE SCREEN -->
+  <!-- HIGHSCORE SCREEN -->
   <div id="highscore-screen" class="screen">
     <div class="card">
       <div class="card-title">🏆 Highscores (Effizienz)</div>
@@ -226,7 +233,6 @@
   </div>
 
   <script>
-    // --- BEREINIGTE CHARAKTER DATENBANK (118 Charaktere, keine Eintagsfliegen) ---
     const DB = [
       {"id": 1, "name": "James T. Kirk", "series": "TOS", "KD": 10, "WM": 5, "TT": 9, "TG": 7},
       {"id": 2, "name": "Spock", "series": "TOS", "KD": 7, "WM": 10, "TT": 7, "TG": 4},
@@ -317,310 +323,4 @@
       {"id": 98, "name": "Dr. Mora Pol", "series": "DS9", "KD": 4, "WM": 9, "TT": 3, "TG": 4},
       {"id": 100, "name": "Kathryn Janeway", "series": "VOY", "KD": 10, "WM": 8, "TT": 8, "TG": 6},
       {"id": 101, "name": "Chakotay", "series": "VOY", "KD": 8, "WM": 5, "TT": 8, "TG": 5},
-      {"id": 102, "name": "Tuvok", "series": "VOY", "KD": 7, "WM": 7, "TT": 9, "TG": 5},
-      {"id": 103, "name": "B'Elanna Torres", "series": "VOY", "KD": 5, "WM": 7, "TT": 10, "TG": 5},
-      {"id": 104, "name": "Tom Paris", "series": "VOY", "KD": 6, "WM": 4, "TT": 9, "TG": 6},
-      {"id": 105, "name": "Harry Kim", "series": "VOY", "KD": 4, "WM": 7, "TT": 7, "TG": 2},
-      {"id": 106, "name": "Der Doktor (MHK)", "series": "VOY", "KD": 5, "WM": 10, "TT": 5, "TG": 4},
-      {"id": 107, "name": "Seven of Nine", "series": "VOY", "KD": 6, "WM": 10, "TT": 9, "TG": 4},
-      {"id": 108, "name": "Neelix", "series": "VOY", "KD": 6, "WM": 4, "TT": 3, "TG": 7},
-      {"id": 109, "name": "Kes", "series": "VOY", "KD": 4, "WM": 8, "TT": 3, "TG": 3},
-      {"id": 110, "name": "Seska", "series": "VOY", "KD": 6, "WM": 6, "TT": 7, "TG": 10},
-      {"id": 111, "name": "Maje Culluh", "series": "VOY", "KD": 7, "WM": 2, "TT": 7, "TG": 7},
-      {"id": 112, "name": "Icheb", "series": "VOY", "KD": 4, "WM": 9, "TT": 7, "TG": 2},
-      {"id": 113, "name": "Naomi Wildman", "series": "VOY", "KD": 3, "WM": 5, "TT": 3, "TG": 3},
-      {"id": 114, "name": "Lon Suder", "series": "VOY", "KD": 2, "WM": 3, "TT": 8, "TG": 7},
-      {"id": 115, "name": "Samantha Wildman", "series": "VOY", "KD": 3, "WM": 7, "TT": 4, "TG": 2},
-      {"id": 116, "name": "Joe Carey", "series": "VOY", "KD": 3, "WM": 6, "TT": 8, "TG": 2},
-      {"id": 117, "name": "Vorik", "series": "VOY", "KD": 3, "WM": 7, "TT": 8, "TG": 2},
-      {"id": 118, "name": "Michael Jonas", "series": "VOY", "KD": 3, "WM": 3, "TT": 5, "TG": 7},
-      {"id": 119, "name": "Borg-Königin", "series": "VOY", "KD": 10, "WM": 9, "TT": 10, "TG": 9},
-      {"id": 121, "name": "Captain Ransom", "series": "VOY", "KD": 7, "WM": 5, "TT": 7, "TG": 8},
-      {"id": 122, "name": "Commander Burke", "series": "VOY", "KD": 5, "WM": 4, "TT": 6, "TG": 7},
-      {"id": 126, "name": "Mezoti", "series": "VOY", "KD": 2, "WM": 7, "TT": 5, "TG": 2},
-      {"id": 127, "name": "Axum", "series": "VOY", "KD": 7, "WM": 6, "TT": 7, "TG": 6},
-      {"id": 129, "name": "Captain Chaotica", "series": "VOY", "KD": 7, "WM": 2, "TT": 5, "TG": 6},
-      {"id": 130, "name": "Satan's Robot", "series": "VOY", "KD": 1, "WM": 1, "TT": 6, "TG": 1},
-      {"id": 137, "name": "Karr (Hirogen)", "series": "VOY", "KD": 7, "WM": 3, "TT": 9, "TG": 6},
-      {"id": 138, "name": "Turanj (Hirogen)", "series": "VOY", "KD": 5, "WM": 2, "TT": 8, "TG": 5},
-      {"id": 139, "name": "Donik (Hirogen)", "series": "VOY", "KD": 3, "WM": 7, "TT": 8, "TG": 3},
-      {"id": 140, "name": "Lt. Ayala", "series": "VOY", "KD": 3, "WM": 2, "TT": 6, "TG": 3}
-    ];
-
-    // --- MISSIONEN (Mit Fließtext-Beschreibung) ---
-    const MISSIONS = [
-      { name: "🛸 Borg-Kubus Abfangmission", desc: "Technik/Taktik (x3) | Wissenschaft/Med. (x2)", fullDesc: "Ein Borg-Kubus nähert sich dem Sektor! Das Außenteam muss Schildfrequenzen rotieren, Enterkommandos abwehren und die Schwachstellen des Kubus analysieren.", mults: { TT: 3, WM: 2, KD: 0, TG: 0 } },
-      { name: "🕊️ Erstkontakt im Gamma-Quadranten", desc: "Kommando/Diplom. (x3) | Wissenschaft/Med. (x2)", fullDesc: "Eine stolze, noch unbekannte Spezies droht nach einem Missverständnis mit Krieg. Das Team muss linguistische Analysen durchführen und diplomatisches Feingefühl beweisen.", mults: { KD: 3, WM: 2, TT: 0, TG: 0 } },
-      { name: "💰 Ferengi-Schmuggel & Verhandlung", desc: "Täuschung/Gerissenheit (x3) | Kommando/Diplom. (x2)", fullDesc: "Ein inoffizielles Treffen mit dem Großen Nagus auf Ferenginar steht an. Nur wer extrem gerissen verhandelt und alle Tricks durchschaut, bekommt den begehrten Vertrag.", mults: { TG: 3, KD: 2, WM: 0, TT: 0 } },
-      { name: "☣️ Biologische Seuche auf Kolonie", desc: "Wissenschaft/Med. (x3) | Kommando/Diplom. (x2)", fullDesc: "Ein unbekanntes und hochgradig ansteckendes Virus ist ausgebrochen. Das Team muss ein Heilmittel entwickeln und gleichzeitig eine Massenpanik unter den Kolonisten verhindern.", mults: { WM: 3, KD: 2, TT: 0, TG: 0 } },
-      { name: "🌋 Dämon-Klasse Welt", desc: "Technik/Taktik (x3) | Wissenschaft/Med. (x2)", fullDesc: "Das Shuttle ist in einer toxischen Atmosphäre abgestürzt. Lebenserhaltung und Sensoren müssen repariert werden, während das Team mit medizinischen Mitteln gegen die giftige Luft ankämpft.", mults: { TT: 3, WM: 2, KD: 0, TG: 0 } },
-      { name: "🕵️ Romulanische Intrige", desc: "Täuschung/Gerissenheit (x3) | Technik/Taktik (x2)", fullDesc: "Ein getarntes romulanisches Schiff hat im neutralen Sektor eine Falle aufgestellt. Einzig Spionagegeschick und listige taktische Manöver können ein Desaster verhindern.", mults: { TG: 3, TT: 2, KD: 0, WM: 0 } },
-      { name: "⚔️ Klingonisches Ehrenduell", desc: "Technik/Taktik (x3) | Kommando/Diplom. (x1)", fullDesc: "Reiner Kampf und Führungsstärke im Nahkampf sind gefordert. Hier zählen physische Überlegenheit, Waffenkunst und starke taktische Koordination.", mults: { TT: 3, KD: 1, WM: 0, TG: 0 } },
-      { name: "⏳ Temporale Anomalie", desc: "Wissenschaft/Med. (x3) | Täuschung/Gerissenheit (x2)", fullDesc: "Die Zeitlinie gerät aus den Fugen! Das Team muss hochkomplexe temporale Berechnungen anstellen und in der Vergangenheit extrem unauffällig agieren, um die Zukunft zu retten.", mults: { WM: 3, TG: 2, KD: 0, TT: 0 } }
-    ];
-
-    const SYNERGIES = [
-      { ids: [1, 2, 3], bonus: 5, name: "TOS Trio" },
-      { ids: [17, 63], bonus: 3, name: "Ingenieure (Geordi/O'Brien)" },
-      { ids: [16, 74], bonus: 3, name: "Ehrengarde (Worf/Martok)" },
-      { ids: [65, 84], bonus: 4, name: "Obsidian Orden (Garak/Tain)" },
-      { ids: [57, 66], bonus: -5, name: "Feinde (Sisko/Dukat)" },
-      { ids: [100, 110], bonus: -3, name: "Maquis-Verrat (Janeway/Seska)" },
-      { ids: [26, 27], bonus: -4, name: "Chaos (Q/Lore)" }
-    ];
-
-    let state = {
-      latinum: { Hjalmar: 20, Jonas: 20 },
-      teams: { Hjalmar: [], Jonas: [] },
-      pool: [],
-      currentIndex: 0,
-      currentBid: 0,
-      activeMission: null
-    };
-
-    function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
-
-    // 1. Zieht die Charaktere und EINE Mission, zeigt den Reveal Screen
-    function startDraftProcess() {
-      const shuffled = [...DB].sort(() => 0.5 - Math.random());
-      state.pool = shuffled.slice(0, 10);
-      state.currentIndex = 0;
-      state.latinum = { Hjalmar: 20, Jonas: 20 };
-      state.teams = { Hjalmar: [], Jonas: [] };
-      
-      const shuffledMissions = [...MISSIONS].sort(() => 0.5 - Math.random());
-      state.activeMission = shuffledMissions[0]; // Genau 1 Mission ziehen
-
-      document.getElementById('reveal-mission-name').innerText = state.activeMission.name;
-      document.getElementById('reveal-mission-desc').innerText = state.activeMission.fullDesc;
-      document.getElementById('reveal-mission-mults').innerText = state.activeMission.desc;
-
-      showScreen('mission-reveal-screen');
-    }
-
-    // 2. Startet die eigentliche Auktion nach dem Reveal
-    function startAuction() {
-      showScreen('auction-screen');
-      renderAuctionRound();
-    }
-
-    function renderAuctionRound() {
-      const char = state.pool[state.currentIndex];
-      document.getElementById('round-indicator').innerText = `Charakter ${state.currentIndex + 1} / 10`;
-      document.getElementById('char-series').innerText = char.series;
-      document.getElementById('char-name').innerText = char.name;
-      document.getElementById('st-kd').innerText = char.KD;
-      document.getElementById('st-wm').innerText = char.WM;
-      document.getElementById('st-tt').innerText = char.TT;
-      document.getElementById('st-tg').innerText = char.TG;
-
-      document.getElementById('lat-hjalmar').innerText = `${state.latinum.Hjalmar} 🟡`;
-      document.getElementById('lat-jonas').innerText = `${state.latinum.Jonas} 🟡`;
-
-      updateTeamLists();
-
-      state.currentBid = 0;
-      document.getElementById('bid-price-val').innerText = '0';
-      document.getElementById('bidder-select').value = 'Hjalmar';
-      togglePriceRow();
-    }
-
-    // Aktualisiert die Live-Team-Listen unten
-    function updateTeamLists() {
-      document.getElementById('count-hjalmar').innerText = state.teams.Hjalmar.length;
-      document.getElementById('count-jonas').innerText = state.teams.Jonas.length;
-
-      document.getElementById('team-list-hjalmar').innerHTML = state.teams.Hjalmar.length === 0 
-        ? "<i>Keine</i>" 
-        : state.teams.Hjalmar.map(c => `<li>- ${c.name}</li>`).join('');
-
-      document.getElementById('team-list-jonas').innerHTML = state.teams.Jonas.length === 0 
-        ? "<i>Keine</i>" 
-        : state.teams.Jonas.map(c => `<li>- ${c.name}</li>`).join('');
-    }
-
-    document.getElementById('bidder-select').addEventListener('change', togglePriceRow);
-
-    function togglePriceRow() {
-      const bidder = document.getElementById('bidder-select').value;
-      const priceRow = document.getElementById('price-row');
-      if (bidder === 'Niemand') {
-        priceRow.style.display = 'none';
-        state.currentBid = 0;
-      } else {
-        priceRow.style.display = 'flex';
-      }
-    }
-
-    function adjustBid(delta) {
-      const bidder = document.getElementById('bidder-select').value;
-      if (bidder === 'Niemand') return;
-      
-      const maxAvailable = state.latinum[bidder];
-      let newBid = state.currentBid + delta;
-      if (newBid < 0) newBid = 0;
-      if (newBid > maxAvailable) newBid = maxAvailable;
-
-      state.currentBid = newBid;
-      document.getElementById('bid-price-val').innerText = state.currentBid;
-    }
-
-    function confirmBid() {
-      const bidder = document.getElementById('bidder-select').value;
-      const char = state.pool[state.currentIndex];
-
-      if (bidder !== 'Niemand') {
-        if (state.currentBid > state.latinum[bidder]) {
-          alert(`${bidder} hat nicht genug Latinum!`);
-          return;
-        }
-        state.latinum[bidder] -= state.currentBid;
-        state.teams[bidder].push(char);
-      }
-
-      state.currentIndex++;
-      if (state.currentIndex < 10) {
-        renderAuctionRound();
-      } else {
-        finishGame();
-      }
-    }
-
-    function calcTeamScore(team, mission) {
-      let score = 0;
-      const teamIds = team.map(c => c.id);
-
-      // Missions-Punkte für die EINE Mission berechnen
-      team.forEach(char => {
-        score += (char.KD * mission.mults.KD) +
-                 (char.WM * mission.mults.WM) +
-                 (char.TT * mission.mults.TT) +
-                 (char.TG * mission.mults.TG);
-      });
-
-      // Synergien checken
-      SYNERGIES.forEach(syn => {
-        const hasAll = syn.ids.every(id => teamIds.includes(id));
-        if (hasAll) score += syn.bonus;
-      });
-
-      return score;
-    }
-
-    function calcMaxPossibleScore(pool, mission) {
-      let maxScore = 0;
-      const n = pool.length;
-
-      for (let i = 0; i < (1 << n); i++) {
-        const subteam = [];
-        for (let j = 0; j < n; j++) {
-          if ((i & (1 << j)) !== 0) {
-            subteam.push(pool[j]);
-          }
-        }
-        const s = calcTeamScore(subteam, mission);
-        if (s > maxScore) maxScore = s;
-      }
-      return maxScore || 1;
-    }
-
-    function getRank(eff) {
-      if (eff >= 90) return { title: "Admiral", color: "var(--lcars-yellow)" };
-      if (eff >= 75) return { title: "Captain", color: "var(--lcars-orange)" };
-      if (eff >= 60) return { title: "Commander", color: "var(--lcars-blue)" };
-      if (eff >= 45) return { title: "Fähnrich", color: "var(--lcars-purple)" };
-      return { title: "Redshirt", color: "var(--lcars-red)" };
-    }
-
-    function finishGame() {
-      const scoreHjalmar = calcTeamScore(state.teams.Hjalmar, state.activeMission);
-      const scoreJonas = calcTeamScore(state.teams.Jonas, state.activeMission);
-      const maxPossible = calcMaxPossibleScore(state.pool, state.activeMission);
-
-      const effHjalmar = ((scoreHjalmar / maxPossible) * 100).toFixed(1);
-      const effJonas = ((scoreJonas / maxPossible) * 100).toFixed(1);
-
-      const rankHjalmar = getRank(effHjalmar);
-      const rankJonas = getRank(effJonas);
-
-      const banner = document.getElementById('winner-banner');
-      if (scoreHjalmar > scoreJonas) {
-        banner.innerText = `🏆 HJALMAR GEWINNT! (${scoreHjalmar} vs ${scoreJonas})`;
-      } else if (scoreJonas > scoreHjalmar) {
-        banner.innerText = `🏆 JONAS GEWINNT! (${scoreJonas} vs ${scoreHjalmar})`;
-      } else {
-        banner.innerText = `🤝 UNENTSCHIEDEN! (${scoreHjalmar} Pkt)`;
-      }
-
-      document.getElementById('missions-list').innerHTML = `
-        <div style="margin-bottom:6px;">
-          <b style="color:var(--lcars-yellow);">${state.activeMission.name}</b><br>
-          <span style="color:#aaa;">Fokus: ${state.activeMission.desc}</span>
-        </div>
-      `;
-
-      document.getElementById('result-table-body').innerHTML = `
-        <tr>
-          <td><b>Hjalmar</b></td>
-          <td>${scoreHjalmar}</td>
-          <td><b>${effHjalmar}%</b></td>
-          <td style="color:${rankHjalmar.color}; font-weight:bold;">${rankHjalmar.title}</td>
-        </tr>
-        <tr>
-          <td><b>Jonas</b></td>
-          <td>${scoreJonas}</td>
-          <td><b>${effJonas}%</b></td>
-          <td style="color:${rankJonas.color}; font-weight:bold;">${rankJonas.title}</td>
-        </tr>
-      `;
-
-      saveHighscore("Hjalmar", effHjalmar, rankHjalmar.title);
-      saveHighscore("Jonas", effJonas, rankJonas.title);
-
-      showScreen('result-screen');
-    }
-
-    function getHighscores() {
-      const raw = localStorage.getItem('st_latinum_highscores_v2');
-      return raw ? JSON.parse(raw) : [];
-    }
-
-    function saveHighscore(player, eff, rank) {
-      let scores = getHighscores();
-      scores.push({ player, eff: parseFloat(eff), rank });
-      scores.sort((a, b) => b.eff - a.eff);
-      scores = scores.slice(0, 15);
-      localStorage.setItem('st_latinum_highscores_v2', JSON.stringify(scores));
-    }
-
-    function showHighscores() {
-      const scores = getHighscores();
-      const tbody = document.getElementById('highscore-table-body');
-      
-      if (scores.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Noch keine Highscores vorhanden</td></tr>`;
-      } else {
-        tbody.innerHTML = scores.map((s, idx) => `
-          <tr>
-            <td>${idx + 1}</td>
-            <td><b>${s.player}</b></td>
-            <td style="color:var(--lcars-yellow); font-weight:bold;">${s.eff}%</td>
-            <td>${s.rank}</td>
-          </tr>
-        `).join('');
-      }
-      showScreen('highscore-screen');
-    }
-
-    function clearHighscores() {
-      if (confirm('Wirklich alle Highscores löschen?')) {
-        localStorage.removeItem('st_latinum_highscores_v2');
-        showHighscores();
-      }
-    }
-  </script>
-</body>
-</html>
+      {"id": 102, "name": "Tuvok", "series": "VOY", "K
