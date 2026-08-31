@@ -65,6 +65,7 @@
 
     .winner-banner { background: var(--lcars-yellow); color: #000; text-align: center; padding: 10px; font-size: 1.3rem; font-weight: bold; border-radius: 6px; margin-bottom: 12px; text-transform: uppercase; }
     .end-teams { font-size: 0.85rem; line-height: 1.4; }
+    .story-outcome { font-size: 1rem; line-height: 1.4; font-weight: bold; text-align: center; padding: 12px; border-radius: 6px; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -182,8 +183,8 @@
     <div class="winner-banner" id="winner-banner">HJALMAR GEWINNT!</div>
 
     <div class="card">
-      <div class="card-title">🚀 Gespielte Mission</div>
-      <div id="missions-list" style="font-size:0.85rem; line-height:1.4;"></div>
+      <div class="card-title" id="final-mission-title">🚀 Gespielte Mission</div>
+      <div id="story-outcome-box" class="story-outcome"></div>
     </div>
 
     <div class="card">
@@ -200,7 +201,7 @@
         <tbody id="result-table-body"></tbody>
       </table>
       <div style="font-size: 0.75rem; color: #888; margin-top: 8px; text-align: center;">
-        *100% entspricht dem stärksten 5er-Team dieser Runde. Über 100% sind mit größeren Teams möglich!
+        *100% entspricht dem stärksten 5er-Team dieser Runde. 70% genügen für einen Missionserfolg!
       </div>
     </div>
 
@@ -233,7 +234,6 @@
   </div>
 
   <script>
-    // SICHERHEIT: Alle Script-Inhalte werden sicher ausgeführt
     const DB = [
       {"id": 1, "name": "James T. Kirk", "series": "TOS", "KD": 10, "WM": 5, "TT": 9, "TG": 7},
       {"id": 2, "name": "Spock", "series": "TOS", "KD": 7, "WM": 10, "TT": 7, "TG": 4},
@@ -323,4 +323,381 @@
       {"id": 97, "name": "Luther Sloan", "series": "DS9", "KD": 6, "WM": 5, "TT": 7, "TG": 10},
       {"id": 98, "name": "Dr. Mora Pol", "series": "DS9", "KD": 4, "WM": 9, "TT": 3, "TG": 4},
       {"id": 100, "name": "Kathryn Janeway", "series": "VOY", "KD": 10, "WM": 8, "TT": 8, "TG": 6},
-      {"id": 101, "name": "Chakotay", "series": "VOY",
+      {"id": 101, "name": "Chakotay", "series": "VOY", "KD": 8, "WM": 5, "TT": 8, "TG": 5},
+      {"id": 102, "name": "Tuvok", "series": "VOY", "KD": 7, "WM": 7, "TT": 9, "TG": 5},
+      {"id": 103, "name": "B'Elanna Torres", "series": "VOY", "KD": 5, "WM": 7, "TT": 10, "TG": 5},
+      {"id": 104, "name": "Tom Paris", "series": "VOY", "KD": 6, "WM": 4, "TT": 9, "TG": 6},
+      {"id": 105, "name": "Harry Kim", "series": "VOY", "KD": 4, "WM": 7, "TT": 7, "TG": 2},
+      {"id": 106, "name": "Der Doktor (MHK)", "series": "VOY", "KD": 5, "WM": 10, "TT": 5, "TG": 4},
+      {"id": 107, "name": "Seven of Nine", "series": "VOY", "KD": 6, "WM": 10, "TT": 9, "TG": 4},
+      {"id": 108, "name": "Neelix", "series": "VOY", "KD": 6, "WM": 4, "TT": 3, "TG": 7},
+      {"id": 109, "name": "Kes", "series": "VOY", "KD": 4, "WM": 8, "TT": 3, "TG": 3},
+      {"id": 110, "name": "Seska", "series": "VOY", "KD": 6, "WM": 6, "TT": 7, "TG": 10},
+      {"id": 111, "name": "Maje Culluh", "series": "VOY", "KD": 7, "WM": 2, "TT": 7, "TG": 7},
+      {"id": 112, "name": "Icheb", "series": "VOY", "KD": 4, "WM": 9, "TT": 7, "TG": 2},
+      {"id": 113, "name": "Naomi Wildman", "series": "VOY", "KD": 3, "WM": 5, "TT": 3, "TG": 3},
+      {"id": 114, "name": "Lon Suder", "series": "VOY", "KD": 2, "WM": 3, "TT": 8, "TG": 7},
+      {"id": 115, "name": "Samantha Wildman", "series": "VOY", "KD": 3, "WM": 7, "TT": 4, "TG": 2},
+      {"id": 116, "name": "Joe Carey", "series": "VOY", "KD": 3, "WM": 6, "TT": 8, "TG": 2},
+      {"id": 117, "name": "Vorik", "series": "VOY", "KD": 3, "WM": 7, "TT": 8, "TG": 2},
+      {"id": 118, "name": "Michael Jonas", "series": "VOY", "KD": 3, "WM": 3, "TT": 5, "TG": 7},
+      {"id": 119, "name": "Borg-Königin", "series": "VOY", "KD": 10, "WM": 9, "TT": 10, "TG": 9},
+      {"id": 121, "name": "Captain Ransom", "series": "VOY", "KD": 7, "WM": 5, "TT": 7, "TG": 8},
+      {"id": 122, "name": "Commander Burke", "series": "VOY", "KD": 5, "WM": 4, "TT": 6, "TG": 7},
+      {"id": 126, "name": "Mezoti", "series": "VOY", "KD": 2, "WM": 7, "TT": 5, "TG": 2},
+      {"id": 127, "name": "Axum", "series": "VOY", "KD": 7, "WM": 6, "TT": 7, "TG": 6},
+      {"id": 129, "name": "Captain Chaotica", "series": "VOY", "KD": 7, "WM": 2, "TT": 5, "TG": 6},
+      {"id": 130, "name": "Satan's Robot", "series": "VOY", "KD": 1, "WM": 1, "TT": 6, "TG": 1},
+      {"id": 137, "name": "Karr (Hirogen)", "series": "VOY", "KD": 7, "WM": 3, "TT": 9, "TG": 6},
+      {"id": 138, "name": "Turanj (Hirogen)", "series": "VOY", "KD": 5, "WM": 2, "TT": 8, "TG": 5},
+      {"id": 139, "name": "Donik (Hirogen)", "series": "VOY", "KD": 3, "WM": 7, "TT": 8, "TG": 3},
+      {"id": 140, "name": "Lt. Ayala", "series": "VOY", "KD": 3, "WM": 2, "TT": 6, "TG": 3}
+    ];
+
+    const MISSIONS = [
+      { name: "🛸 Borg-Kubus Abfangmission", desc: "Technik/Taktik (x3) | Wissenschaft/Med. (x2)", fullDesc: "Ein Borg-Kubus nähert sich dem Sektor! Das Außenteam muss Schildfrequenzen rotieren, Enterkommandos abwehren und die Schwachstellen analysieren.", mults: { TT: 3, WM: 2, KD: 1, TG: 1 },
+        textSuccess: "Das Außenteam arbeitete mit perfekter Präzision. Der Kubus wurde erfolgreich deaktiviert!",
+        textFail: "Das Außenteam war zu schwach und hat die Borg unterschätzt – alle wurden assimiliert." },
+        
+      { name: "🕊️ Erstkontakt im Gamma-Quadranten", desc: "Kommando/Diplom. (x3) | Wissenschaft/Med. (x2)", fullDesc: "Eine stolze, noch unbekannte Spezies droht nach einem Missverständnis mit Krieg. Das Team muss linguistische Analysen durchführen und diplomatisches Feingefühl beweisen.", mults: { KD: 3, WM: 2, TT: 1, TG: 1 },
+        textSuccess: "Dank brillianter Diplomatie und linguistischem Geschick wurde ein historisches Friedensabkommen geschlossen.",
+        textFail: "Die Verhandlungen sind katastrophal gescheitert. Der Gamma-Quadrant hat der Föderation den Krieg erklärt!" },
+        
+      { name: "💰 Ferengi-Schmuggel & Verhandlung", desc: "Täuschung/Gerissenh. (x3) | Kommando/Diplom. (x2)", fullDesc: "Ein inoffizielles Treffen mit dem Großen Nagus auf Ferenginar. Nur wer extrem gerissen verhandelt und alle Tricks durchschaut, bekommt den Vertrag.", mults: { TG: 3, KD: 2, WM: 1, TT: 1 },
+        textSuccess: "Ein meisterhafter Deal! Das Team hat den Nagus überlistet und den Föderationsvorrat an Latinum verdoppelt.",
+        textFail: "Völlig über den Tisch gezogen! Das Team wurde enteignet und schrubbt jetzt die Promenadendecks auf Ferenginar." },
+        
+      { name: "☣️ Biologische Seuche", desc: "Wissenschaft/Med. (x3) | Kommando/Diplom. (x2)", fullDesc: "Ein hochgradig ansteckendes Virus bricht aus. Das Team muss ein Heilmittel entwickeln und gleichzeitig eine Massenpanik unter den Kolonisten verhindern.", mults: { WM: 3, KD: 2, TT: 1, TG: 1 },
+        textSuccess: "In letzter Sekunde wurde das Heilmittel synthetisiert. Die Kolonie ist gerettet und das Team wird als Helden gefeiert!",
+        textFail: "Die Quarantäne wurde gebrochen. Das Virus hat sich ausgebreitet und die Kolonie musste evakuiert werden." },
+        
+      { name: "🌋 Dämon-Klasse Welt Überleben", desc: "Technik/Taktik (x3) | Wissenschaft/Med. (x2)", fullDesc: "Das Shuttle ist in einer toxischen Atmosphäre abgestürzt. Lebenserhaltung muss repariert werden, während das Team gegen die giftige Umgebung ankämpft.", mults: { TT: 3, WM: 2, KD: 1, TG: 1 },
+        textSuccess: "Durch geniale Reparaturen und eiserne Ausdauer konnte das Shuttle rechtzeitig wieder in den Orbit starten.",
+        textFail: "Die Lebenserhaltung hat versagt. Das Team ist nun ein permanenter Teil der toxischen Atmosphäre..." },
+        
+      { name: "🕵️ Romulanische Intrige", desc: "Täuschung/Gerissenh. (x3) | Technik/Taktik (x2)", fullDesc: "Ein getarntes romulanisches Schiff hat im neutralen Sektor eine Falle aufgestellt. Spionagegeschick und listige taktische Manöver sind gefordert.", mults: { TG: 3, TT: 2, KD: 1, WM: 1 },
+        textSuccess: "Die Tarnung wurde durchschaut! Das Team hat den Tal Shiar mit seinen eigenen Waffen geschlagen.",
+        textFail: "Das Team tappte blind in die Falle. Ein diplomatischer Vorfall zwingt die Sternenflotte zu peinlichen Zugeständnissen." },
+        
+      { name: "⚔️ Klingonisches Ehrenduell", desc: "Technik/Taktik (x3) | Kommando/Diplom. (x2)", fullDesc: "Reiner Kampf und Führungsstärke im Nahkampf sind gefordert. Hier zählen physische Überlegenheit, Waffenkunst und starke Koordination.", mults: { TT: 3, KD: 2, WM: 1, TG: 1 },
+        textSuccess: "Qapla'! Das Team hat ehrenvoll gekämpft und den tiefen Respekt des Hohen Rates errungen.",
+        textFail: "Eine schändliche Niederlage. Das Team wurde entehrt und auf ewig aus dem klingonischen Reich verbannt." },
+        
+      { name: "⏳ Temporale Anomalie", desc: "Wissenschaft/Med. (x3) | Täuschung/Gerissenh. (x2)", fullDesc: "Die Zeitlinie reißt! Das Team muss hochkomplexe temporale Berechnungen anstellen und in der Vergangenheit extrem unauffällig agieren.", mults: { WM: 3, TG: 2, KD: 1, TT: 1 },
+        textSuccess: "Die Zeitlinie ist sicher! Das Team hat die Vergangenheit repariert, ohne dass die Temporale Ermittlung eingreifen musste.",
+        textFail: "Ein temporales Paradoxon! Die Geschichte wurde unwiderruflich verändert – die Föderation existiert nicht mehr." },
+        
+      { name: "💫 Qs Prüfung der Menschheit", desc: "Kommando/Diplom. (x3) | Täuschung/Gerissenh. (x2)", fullDesc: "Q erscheint unerwartet und testet die intellektuelle sowie moralische Reife des Teams. Rohe Gewalt oder bloße Theorie bringen hier rein gar nichts.", mults: { KD: 3, TG: 2, WM: 1, TT: 1 },
+        textSuccess: "Sogar Q war beeindruckt. Das Team hat bewiesen, dass die Menschheit das wahre Potenzial für die Sterne besitzt.",
+        textFail: "Q hat genug gesehen. Die Menschheit wurde als 'primitiv und langweilig' eingestuft und in den Delta-Quadranten geschnippt." },
+        
+      { name: "🌌 Gefangen im Nexus", desc: "Täuschung/Gerissenh. (x3) | Wissenschaft/Med. (x2)", fullDesc: "Das Team wurde in den Nexus gesogen. Es braucht tiefes psychologisches Verständnis und enorme Willenskraft (Gerissenheit), um die Illusion zu durchbrechen.", mults: { TG: 3, WM: 2, KD: 1, TT: 1 },
+        textSuccess: "Durch pure Willenskraft hat das Team die perfekte Illusion durchbrochen und in die Realität zurückgefunden.",
+        textFail: "Die Versuchung war zu groß. Das Team hat sich entschieden, für immer in der glücklichen Illusion des Nexus zu bleiben." },
+        
+      { name: "💥 Überraschender Dominion-Angriff", desc: "Technik/Taktik (x3) | Täuschung/Gerissenh. (x2)", fullDesc: "Jem'Hadar-Schiffe enttarnen sich völlig aus dem Nichts! Taktische Brillanz und unkonventionelle List sind die einzige Überlebenschance.", mults: { TT: 3, TG: 2, KD: 1, WM: 1 },
+        textSuccess: "Ein brillanter taktischer Sieg! Die Jem'Hadar wurden ausmanövriert und in die Flucht geschlagen.",
+        textFail: "Das Team wurde von der puren Brutalität der Jem'Hadar überrannt. Das Föderationsschiff ist verloren." },
+        
+      { name: "🌀 Subraum-Riss schließen", desc: "Wissenschaft/Med. (x3) | Technik/Taktik (x2)", fullDesc: "Ein massiver Riss im Subraum droht das Sektor-Gleichgewicht zu zerstören. Astrophysikalisches Genie gepaart mit roher Ingenieurskunst wird verlangt.", mults: { WM: 3, TT: 2, KD: 1, TG: 1 },
+        textSuccess: "Mit einem gewagten Manöver und brillanter Astrophysik wurde der Riss stabilisiert und sicher versiegelt.",
+        textFail: "Die Berechnungen waren fehlerhaft! Der instabile Riss hat das halbe Sternensystem verschlungen." }
+    ];
+
+    const SYNERGIES = [
+      { ids: [1, 2, 3], bonus: 5, name: "TOS Trio" },
+      { ids: [17, 63], bonus: 3, name: "Ingenieure (Geordi/O'Brien)" },
+      { ids: [16, 74], bonus: 3, name: "Ehrengarde (Worf/Martok)" },
+      { ids: [65, 84], bonus: 4, name: "Obsidian Orden (Garak/Tain)" },
+      { ids: [57, 66], bonus: -5, name: "Feinde (Sisko/Dukat)" },
+      { ids: [100, 110], bonus: -3, name: "Maquis-Verrat (Janeway/Seska)" },
+      { ids: [26, 27], bonus: -4, name: "Chaos (Q/Lore)" }
+    ];
+
+    let state = {
+      latinum: { Hjalmar: 20, Jonas: 20 },
+      teams: { Hjalmar: [], Jonas: [] },
+      pool: [],
+      currentIndex: 0,
+      currentBid: 0,
+      activeMission: null
+    };
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function startDraftProcess() {
+      const shuffled = [...DB].sort(() => 0.5 - Math.random());
+      state.pool = shuffled.slice(0, 10);
+      state.currentIndex = 0;
+      state.latinum = { Hjalmar: 20, Jonas: 20 };
+      state.teams = { Hjalmar: [], Jonas: [] };
+      
+      const shuffledMissions = [...MISSIONS].sort(() => 0.5 - Math.random());
+      state.activeMission = shuffledMissions[0];
+
+      document.getElementById('reveal-mission-name').innerText = state.activeMission.name;
+      document.getElementById('reveal-mission-desc').innerText = state.activeMission.fullDesc;
+      document.getElementById('reveal-mission-mults').innerText = state.activeMission.desc;
+
+      showScreen('mission-reveal-screen');
+    }
+
+    function startAuction() {
+      showScreen('auction-screen');
+      renderAuctionRound();
+    }
+
+    function renderAuctionRound() {
+      const char = state.pool[state.currentIndex];
+      document.getElementById('round-indicator').innerText = `Charakter ${state.currentIndex + 1} / 10`;
+      document.getElementById('char-series').innerText = char.series;
+      document.getElementById('char-name').innerText = char.name;
+      document.getElementById('st-kd').innerText = char.KD;
+      document.getElementById('st-wm').innerText = char.WM;
+      document.getElementById('st-tt').innerText = char.TT;
+      document.getElementById('st-tg').innerText = char.TG;
+
+      document.getElementById('lat-hjalmar').innerText = `${state.latinum.Hjalmar} 🟡`;
+      document.getElementById('lat-jonas').innerText = `${state.latinum.Jonas} 🟡`;
+
+      updateTeamLists();
+
+      state.currentBid = 0;
+      document.getElementById('bid-price-val').innerText = '0';
+      document.getElementById('bidder-select').value = 'Hjalmar';
+      togglePriceRow();
+    }
+
+    function updateTeamLists() {
+      document.getElementById('count-hjalmar').innerText = state.teams.Hjalmar.length;
+      document.getElementById('count-jonas').innerText = state.teams.Jonas.length;
+
+      document.getElementById('team-list-hjalmar').innerHTML = state.teams.Hjalmar.length === 0 
+        ? "<i>Keine</i>" 
+        : state.teams.Hjalmar.map(c => `<li>- ${c.name}</li>`).join('');
+
+      document.getElementById('team-list-jonas').innerHTML = state.teams.Jonas.length === 0 
+        ? "<i>Keine</i>" 
+        : state.teams.Jonas.map(c => `<li>- ${c.name}</li>`).join('');
+    }
+
+    function togglePriceRow() {
+      const bidder = document.getElementById('bidder-select').value;
+      const priceRow = document.getElementById('price-row');
+      if (bidder === 'Niemand') {
+        priceRow.style.display = 'none';
+        state.currentBid = 0;
+      } else {
+        priceRow.style.display = 'flex';
+      }
+    }
+
+    function adjustBid(delta) {
+      const bidder = document.getElementById('bidder-select').value;
+      if (bidder === 'Niemand') return;
+      
+      const maxAvailable = state.latinum[bidder];
+      let newBid = state.currentBid + delta;
+      if (newBid < 0) newBid = 0;
+      if (newBid > maxAvailable) newBid = maxAvailable;
+
+      state.currentBid = newBid;
+      document.getElementById('bid-price-val').innerText = state.currentBid;
+    }
+
+    function confirmBid() {
+      const bidder = document.getElementById('bidder-select').value;
+      const char = state.pool[state.currentIndex];
+
+      if (bidder !== 'Niemand') {
+        if (state.currentBid > state.latinum[bidder]) {
+          alert(`${bidder} hat nicht genug Latinum!`);
+          return;
+        }
+        state.latinum[bidder] -= state.currentBid;
+        state.teams[bidder].push(char);
+      }
+
+      state.currentIndex++;
+      if (state.currentIndex < 10) {
+        renderAuctionRound();
+      } else {
+        finishGame();
+      }
+    }
+
+    function calcTeamScore(team, mission) {
+      let score = 0;
+      const teamIds = team.map(c => c.id);
+
+      team.forEach(char => {
+        score += (char.KD * mission.mults.KD) +
+                 (char.WM * mission.mults.WM) +
+                 (char.TT * mission.mults.TT) +
+                 (char.TG * mission.mults.TG);
+      });
+
+      SYNERGIES.forEach(syn => {
+        const hasAll = syn.ids.every(id => teamIds.includes(id));
+        if (hasAll) score += syn.bonus;
+      });
+
+      return score;
+    }
+
+    function calcMaxPossible5CharScore(pool, mission) {
+      let maxScore = 0;
+      const n = pool.length;
+
+      for (let i = 0; i < (1 << n); i++) {
+        let bitCount = 0;
+        for (let j = 0; j < n; j++) {
+          if ((i & (1 << j)) !== 0) bitCount++;
+        }
+        
+        if (bitCount === 5) {
+          const subteam = [];
+          for (let j = 0; j < n; j++) {
+            if ((i & (1 << j)) !== 0) subteam.push(pool[j]);
+          }
+          const s = calcTeamScore(subteam, mission);
+          if (s > maxScore) maxScore = s;
+        }
+      }
+      return maxScore || 1;
+    }
+
+    function getRank(eff) {
+      if (eff >= 100) return { title: "Flottenadmiral", color: "#00ff00" };
+      if (eff >= 85) return { title: "Admiral", color: "var(--lcars-yellow)" };
+      if (eff >= 70) return { title: "Captain", color: "var(--lcars-orange)" };
+      if (eff >= 50) return { title: "Commander", color: "var(--lcars-blue)" };
+      if (eff >= 35) return { title: "Fähnrich", color: "var(--lcars-purple)" };
+      return { title: "Redshirt", color: "var(--lcars-red)" };
+    }
+
+    function finishGame() {
+      const scoreHjalmar = calcTeamScore(state.teams.Hjalmar, state.activeMission);
+      const scoreJonas = calcTeamScore(state.teams.Jonas, state.activeMission);
+      const maxPossible5 = calcMaxPossible5CharScore(state.pool, state.activeMission);
+
+      const effHjalmar = parseFloat(((scoreHjalmar / maxPossible5) * 100).toFixed(1));
+      const effJonas = parseFloat(((scoreJonas / maxPossible5) * 100).toFixed(1));
+
+      const rankHjalmar = getRank(effHjalmar);
+      const rankJonas = getRank(effJonas);
+
+      // Gewinner ermitteln
+      const banner = document.getElementById('winner-banner');
+      let winnerEff = 0;
+
+      if (scoreHjalmar > scoreJonas) {
+        banner.innerText = `🏆 HJALMAR GEWINNT! (${scoreHjalmar} vs ${scoreJonas})`;
+        winnerEff = effHjalmar;
+      } else if (scoreJonas > scoreHjalmar) {
+        banner.innerText = `🏆 JONAS GEWINNT! (${scoreJonas} vs ${scoreHjalmar})`;
+        winnerEff = effJonas;
+      } else {
+        banner.innerText = `🤝 UNENTSCHIEDEN! (${scoreHjalmar} Pkt)`;
+        winnerEff = effHjalmar; // Bei Unentschieden reicht die Leistung eines der beiden
+      }
+
+      // Story Outcome Check (Grenze: 70% Effizienz für Erfolg)
+      const missionSuccess = winnerEff >= 70;
+      const outcomeBox = document.getElementById('story-outcome-box');
+      document.getElementById('final-mission-title').innerText = `🚀 ${state.activeMission.name}`;
+      
+      if (missionSuccess) {
+        outcomeBox.style.backgroundColor = '#1a331a';
+        outcomeBox.style.border = '2px solid #00ff00';
+        outcomeBox.style.color = '#00ff00';
+        outcomeBox.innerText = `✅ ERFOLG: ${state.activeMission.textSuccess}`;
+      } else {
+        outcomeBox.style.backgroundColor = '#331a1a';
+        outcomeBox.style.border = '2px solid var(--lcars-red)';
+        outcomeBox.style.color = 'var(--lcars-red)';
+        outcomeBox.innerText = `❌ GESCHEITERT: ${state.activeMission.textFail}`;
+      }
+
+      // Tabelle
+      document.getElementById('result-table-body').innerHTML = `
+        <tr>
+          <td><b>Hjalmar</b></td>
+          <td>${scoreHjalmar}</td>
+          <td><b style="color:${effHjalmar >= 100 ? '#00ff00' : 'white'};">${effHjalmar}%</b></td>
+          <td style="color:${rankHjalmar.color}; font-weight:bold;">${rankHjalmar.title}</td>
+        </tr>
+        <tr>
+          <td><b>Jonas</b></td>
+          <td>${scoreJonas}</td>
+          <td><b style="color:${effJonas >= 100 ? '#00ff00' : 'white'};">${effJonas}%</b></td>
+          <td style="color:${rankJonas.color}; font-weight:bold;">${rankJonas.title}</td>
+        </tr>
+      `;
+
+      // Finale Teams auflisten
+      document.getElementById('teams-summary').innerHTML = `
+        <div class="team-col hjalmar">
+          <div class="team-header" style="color: var(--lcars-purple);">Hjalmar (${state.teams.Hjalmar.length})</div>
+          <ul class="team-ul">
+            ${state.teams.Hjalmar.length ? state.teams.Hjalmar.map(c => `<li>- ${c.name}</li>`).join('') : '<i>Keine</i>'}
+          </ul>
+        </div>
+        <div class="team-col jonas">
+          <div class="team-header" style="color: var(--lcars-blue);">Jonas (${state.teams.Jonas.length})</div>
+          <ul class="team-ul">
+            ${state.teams.Jonas.length ? state.teams.Jonas.map(c => `<li>- ${c.name}</li>`).join('') : '<i>Keine</i>'}
+          </ul>
+        </div>
+      `;
+
+      saveHighscore("Hjalmar", effHjalmar, rankHjalmar.title);
+      saveHighscore("Jonas", effJonas, rankJonas.title);
+
+      showScreen('result-screen');
+    }
+
+    function getHighscores() {
+      const raw = localStorage.getItem('st_latinum_highscores_v4');
+      return raw ? JSON.parse(raw) : [];
+    }
+
+    function saveHighscore(player, eff, rank) {
+      let scores = getHighscores();
+      scores.push({ player, eff: parseFloat(eff), rank });
+      scores.sort((a, b) => b.eff - a.eff);
+      scores = scores.slice(0, 15);
+      localStorage.setItem('st_latinum_highscores_v4', JSON.stringify(scores));
+    }
+
+    function showHighscores() {
+      const scores = getHighscores();
+      const tbody = document.getElementById('highscore-table-body');
+      
+      if (scores.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Noch keine Highscores vorhanden</td></tr>`;
+      } else {
+        tbody.innerHTML = scores.map((s, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><b>${s.player}</b></td>
+            <td style="color:${s.eff >= 100 ? '#00ff00' : 'var(--lcars-yellow)'}; font-weight:bold;">${s.eff}%</td>
+            <td>${s.rank}</td>
+          </tr>
+        `).join('');
+      }
+      showScreen('highscore-screen');
+    }
+
+    function clearHighscores() {
+      if (confirm('Wirklich alle Highscores löschen?')) {
+        localStorage.removeItem('st_latinum_highscores_v4');
+        showHighscores();
+      }
+    }
+  </script>
+</body>
+</html>
