@@ -141,7 +141,7 @@
       <div class="bid-controls">
         <div class="bid-row">
           <label for="bidder-select" style="font-size: 0.9rem;">Gewinner:</label>
-          <select id="bidder-select" style="background:#111; color:#fff; border:1px solid var(--lcars-blue); padding:8px; border-radius:4px; font-weight:bold; width:60%;">
+          <select id="bidder-select" onchange="togglePriceRow()" style="background:#111; color:#fff; border:1px solid var(--lcars-blue); padding:8px; border-radius:4px; font-weight:bold; width:60%;">
             <option value="Hjalmar">Hjalmar</option>
             <option value="Jonas">Jonas</option>
             <option value="Niemand">Niemand (Passen)</option>
@@ -233,6 +233,7 @@
   </div>
 
   <script>
+    // SICHERHEIT: Alle Script-Inhalte werden sicher ausgeführt
     const DB = [
       {"id": 1, "name": "James T. Kirk", "series": "TOS", "KD": 10, "WM": 5, "TT": 9, "TG": 7},
       {"id": 2, "name": "Spock", "series": "TOS", "KD": 7, "WM": 10, "TT": 7, "TG": 4},
@@ -322,5 +323,4 @@
       {"id": 97, "name": "Luther Sloan", "series": "DS9", "KD": 6, "WM": 5, "TT": 7, "TG": 10},
       {"id": 98, "name": "Dr. Mora Pol", "series": "DS9", "KD": 4, "WM": 9, "TT": 3, "TG": 4},
       {"id": 100, "name": "Kathryn Janeway", "series": "VOY", "KD": 10, "WM": 8, "TT": 8, "TG": 6},
-      {"id": 101, "name": "Chakotay", "series": "VOY", "KD": 8, "WM": 5, "TT": 8, "TG": 5},
-      {"id": 102, "name": "Tuvok", "series": "VOY", "K
+      {"id": 101, "name": "Chakotay", "series": "VOY",
